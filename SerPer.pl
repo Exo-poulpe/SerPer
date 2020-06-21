@@ -44,7 +44,7 @@ perl SerPer.pl -f MyFile.txt -p \"Poulpe\" --encrypt
 perl SerPer.pl -f EncryptFile.txt.srp -p \"Poulpe\" -o \"FileDecrypt.txt\" --decrypt
 
 perl SerPer.pl -F Folder/ -p \"poulpe\" -e
- This is delete all file in folder and replace by crypted version
+ This is delete all file in folder and replace by encrypted version
 ";
 
 my $versionText = "
@@ -161,11 +161,21 @@ sub main()
         );
         if ( defined $encrypt )
         {
+            my $start = Time::HiRes::gettimeofday();
             EncryptFolderSerpent( $cipher, $folder );
+            my $stop    = Time::HiRes::gettimeofday();
+            my $elapsed = Time::Seconds->new( $stop - $start );
+            $elapsed = $elapsed->pretty;
+            print("Time elapsed : $elapsed\n");
         }
         elsif ( defined $decrypt )
         {
+            my $start = Time::HiRes::gettimeofday();
             DecryptFolderSerpent( $cipher, $folder );
+            my $stop    = Time::HiRes::gettimeofday();
+            my $elapsed = Time::Seconds->new( $stop - $start );
+            $elapsed = $elapsed->pretty;
+            print("Time elapsed : $elapsed\n");
         }
     }
     elsif ( defined $version )
@@ -211,7 +221,6 @@ sub DecryptFileSerpent($$)
 {
     my ( $cipher, $localFile ) = @_;
     my $buffer;
-    my $size = stat($localFile)->size;
     my $dstFile;
     $cipher->start('decrypting');
     open( my $FILE, $localFile );
@@ -243,7 +252,6 @@ sub DecryptFileSerpent($$)
 
     close($FILEDST);
     close($FILE);
-    truncate( $FILEDST, $size );
 }
 
 sub EncryptFolderSerpent($$)
@@ -292,6 +300,7 @@ sub DecryptFolderSerpent($$)
                         print("File : $File::Find::name\n");
                     }
                     DecryptFileSerpent( $cipher, $File::Find::name );
+                    unlink($File::Find::name);
                 }
             },
             no_chdir => 1
